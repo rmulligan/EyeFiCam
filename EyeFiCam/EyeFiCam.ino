@@ -5,9 +5,21 @@
 #include <SoftwareSerial.h>         
 #include <RTClib.h>          // Realtime clock library
 #include <Wire.h>            // Also needed for RTC
+#include "LiquidCrystal.h" // LCD Library
+
+// Connect via i2c, default address #0 (A0-A2 not jumpered)
+LiquidCrystal lcd(0);
 
 #define chipSelect 10
 RTC_DS1307      clock;
+// Time display variables
+int second;
+int hour;
+#define MAX_OUT_CHARS 16  //max nbr of characters to be sent on any one serial command
+char   buffer1[MAX_OUT_CHARS + 1];  //buffer used to format a line (+1 is for trailing 0)
+char   buffer2[MAX_OUT_CHARS + 1];  //buffer used to format a line (+1 is for trailing 0)
+char   amOrPm[1];  //buffer used to format a line (+1 is for trailing 0)
+
 char            directory[] = "DCIM/CANON999", // Emulate Canon folder layout
                 filename[]  = "DCIM/CANON999/IMG_0000.JPG";
 int             imgNum      = 0;
@@ -24,7 +36,8 @@ NewSoftSerial cameraconnection = NewSoftSerial(2, 3);
 Adafruit_VC0706 cam = Adafruit_VC0706(&cameraconnection);
 
 void setup() {
-
+  lcd.setBacklight(HIGH);
+  lcd.begin(16, 2);
   Wire.begin();  // IMPORTANT: the clock should have previously been set
   clock.begin(); // using the 'ds1307' example sketch included with RTClib.
   SdFile::dateTimeCallback(dateTime); // Register timestamp callback
@@ -124,6 +137,7 @@ void setup() {
 }
 
 void loop() {
+  displayTimeAndDate();
 }
 
 void nextFilename(void) {
